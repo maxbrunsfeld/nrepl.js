@@ -1,5 +1,4 @@
 var _ = require("underscore");
-
 var DONE = "done";
 var EVAL_ERROR = "eval-error";
 
@@ -12,8 +11,6 @@ function EvalResponse() {
 
 _.extend(EvalResponse.prototype, {
   addChunk: function(chunk) {
-    console.log(chunk);
-
     if (chunk.value)
       this._valueChunks.push(chunk.value);
     if (chunk.ex)

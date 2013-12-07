@@ -2,6 +2,7 @@ var _ = require("underscore");
 var bencode = require("bencode");
 var uuid = require("node-uuid");
 var EvalResponse = require("./eval_response");
+var DescribeResponse = require("./describe_response");
 
 function Client(socket) {
   this._socket = socket;
@@ -15,6 +16,13 @@ _.extend(Client.prototype, {
       op: 'eval',
       code: expressionString
     }, new EvalResponse(), fn);
+  },
+
+  describe: function(fn) {
+    sendMessage(this, {
+      op: 'describe',
+      'verbose?': 'true'
+    }, new DescribeResponse(), fn);
   },
 
   end: function() {
