@@ -1,0 +1,31 @@
+{
+  "name": "nrepl.js",
+  "version": "0.0.0",
+  "description": "javascript nrepl client",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/maxbrunsfeld/nrepl.js"
+  },
+  "keywords": [
+    "clojure",
+    "nrepl"
+  ],
+  "author": "max brunsfeld",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/maxbrunsfeld/nrepl.js/issues"
+  },
+  "dependencies": {
+    "underscore": "1.5.x",
+    "node-uuid": "1.4.x",
+    "bencode": "0.4.x"
+  },
+  "devDependencies": {
+    "mocha": "1.15.x",
+    "chai": "1.8.x"
+  }
+}
