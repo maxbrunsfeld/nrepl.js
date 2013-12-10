@@ -1,4 +1,3 @@
-var _ = require("underscore");
 var net = require("net");
 var Client = require("./src/client");
 

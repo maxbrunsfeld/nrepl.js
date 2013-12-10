@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "underscore": "1.5.x",
-    "node-uuid": "1.4.x",
     "bencode": "0.4.x"
   },
   "devDependencies": {
     "mocha": "1.15.x",
-    "chai": "1.8.x"
+    "chai": "1.8.x",
+    "async": "0.1.x"
   }
 }

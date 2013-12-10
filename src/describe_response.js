@@ -18,23 +18,8 @@ _.extend(DescribeResponse.prototype, {
   },
 
   value: function() {
-    return stringifyBuffers(this._value);
+    return this._value;
   }
 });
-
-function stringifyBuffers(obj) {
-  var result = {};
-  _.each(obj, function(value, key) {
-    var newValue;
-    if (Buffer.isBuffer(value))
-      newValue = value.toString();
-    else if (_.isObject(value))
-      newValue = stringifyBuffers(value);
-    else
-      newValue = value;
-    result[key] = newValue;
-  });
-  return result;
-}
 
 module.exports = DescribeResponse;

@@ -1,7 +1,8 @@
 require("./spec_helper");
 var _ = require("underscore");
+var async = require("async");
 var nrepl = require(ROOT);
-var PORT = 53939;
+var PORT = 65335;
 
 describe("connecting to an nrepl session", function() {
   var client;
@@ -23,21 +24,37 @@ describe("connecting to an nrepl session", function() {
 
   describe("evaluating an expression", function() {
     describe("when evaluation succeeds", function() {
-      it("yields the value of the expression as a string", function() {
-        client.eval('(str "what" "up")', function(err, value) {
-          expect(value).to.eql('"whatup"');
-          done(err);
-        });
+      it("yields the value of the expression as a string", function(done) {
+        async.forEach([
+          [
+            '(inc 1) (inc 2) (inc 3)',
+            ['2', '3', '4']
+          ],
+          [
+            '*ns*',
+            ['#<Namespace user>']
+          ],
+          [
+            '(map inc [1 2 3])',
+            ['(2 3 4)']
+          ]
+        ], function(pair, f) {
+          var expression = pair[0], expectedValue = pair[1];
+          client.eval(expression, function(err, value) {
+            expect(value).to.eql(expectedValue);
+            f(err);
+          });
+        }, done);
       });
     });
 
     describe("when there is an error", function() {
-      it("yields the error", function() {
+      it("yields the error", function(done) {
         client.eval('(+ "not" "numbers")', function(err, value) {
-          expect(result).to.equal("");
-          expect(error).to.be.instanceof(Error);
-          expect(error.type).to.equal("class java.lang.ClassCastException");
-          expect(error.message).to.equal(
+          expect(value).to.eql([]);
+          expect(err).to.be.instanceof(Error);
+          expect(err.type).to.equal("class java.lang.ClassCastException");
+          expect(err.message).to.equal(
             "ClassCastException " +
             "java.lang.String cannot be cast to java.lang.Number  " +
             "clojure.lang.Numbers.add (Numbers.java:126)\n");
@@ -58,8 +75,8 @@ describe("connecting to an nrepl session", function() {
           doc: "Evaluates code.",
           optional: {
             id: "An opaque message ID that will be included in responses " +
-                  "related to the evaluation, and which may be used to restrict " +
-                  "the scope of a later \"interrupt\" operation."
+                "related to the evaluation, and which may be used to restrict " +
+                "the scope of a later \"interrupt\" operation."
           },
           requires: {
             code: "The code to be evaluated.",

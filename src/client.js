@@ -1,25 +1,25 @@
 var _ = require("underscore");
 var bencode = require("bencode");
-var uuid = require("node-uuid");
 var EvalResponse = require("./eval_response");
 var DescribeResponse = require("./describe_response");
 
 function Client(socket) {
   this._socket = socket;
-  this._conversations = {};
+  this._requests = {};
+  this._nextRequestId = 0;
   startListening(this);
 }
 
 _.extend(Client.prototype, {
-  eval: function(expressionString, fn) {
-    sendMessage(this, {
+  eval: function(expression, fn) {
+    sendRequest(this, {
       op: 'eval',
-      code: expressionString
+      code: expression
     }, new EvalResponse(), fn);
   },
 
   describe: function(fn) {
-    sendMessage(this, {
+    sendRequest(this, {
       op: 'describe',
       'verbose?': 'true'
     }, new DescribeResponse(), fn);
@@ -34,36 +34,53 @@ function startListening(self) {
   self._socket.on("data", function(data) {
     handleData(self, data);
   });
+
+  self._socket.on("error", function(error) {
+    console.error("ERROR:", error);
+  });
 }
 
-function sendMessage(self, message, response, fn) {
-  var id = requestId();
-  var request = bencode.encode(_.extend({
+function sendRequest(self, request, response, fn) {
+  var id = requestId(self);
+  var data = bencode.encode(_.extend({
     id: id
-  }, message));
+  }, request));
 
-  self._conversations[id] = {
+  self._requests[id] = {
     callback: fn,
     response: response
   };
 
-  self._socket.write(request, 'binary');
+  self._socket.write(data, 'binary');
 }
 
 function handleData(self, data) {
-  var message = bencode.decode(data);
-  var id = message.id.toString();
-  var conversation = self._conversations[id];
-  var response = conversation.response;
-  response.addChunk(message);
-  if (response.isDone()) {
-    conversation.callback.call(null, response.error(), response.value());
-    delete self._conversations[id];
-  }
+  var messages = decodeMessages(data);
+  _.each(messages, function(message) {
+    var id = message.id;
+    var request = self._requests[id];
+    if (!request) return;
+    var response = request.response;
+    response.addChunk(message);
+    if (response.isDone()) {
+      request.callback.call(null, response.error(), response.value());
+      delete self._requests[id];
+    }
+  });
 }
 
-function requestId() {
-  return uuid.v1();
+function decodeMessages(data) {
+  var decode = bencode.decode;
+  var result = [decode(data, 'utf8')];
+  while (decode.position < data.length) {
+    var message = decode.next();
+    result.push(message);
+  }
+  return result;
+}
+
+function requestId(self) {
+  return "m" + (self._nextRequestId++);
 }
 
 module.exports = Client;
