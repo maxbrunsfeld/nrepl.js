@@ -22,6 +22,10 @@ describe("connecting to an nrepl session", function() {
     expect(client).to.be.instanceof(nrepl.Client);
   });
 
+  it("is connected", function() {
+    expect(client.isConnected()).to.be.true;
+  });
+
   describe("evaluating an expression", function() {
     describe("when evaluation succeeds", function() {
       it("yields the value of the expression as a string", function(done) {
@@ -88,9 +92,21 @@ describe("connecting to an nrepl session", function() {
       });
     });
   });
+
+  describe("disconnecting", function() {
+    it("is no longer connected", function() {
+      client.end();
+      expect(client.isConnected()).to.be.false;
+    });
+  });
 });
 
 describe("connecting to a non-existent nrepl session", function() {
+  it("is not connected", function() {
+    var client = new nrepl.Client()
+    expect(client.isConnected()).to.be.false;
+  });
+
   it("yields an error", function(done) {
     nrepl.connect(123456, function(err) {
       expect(err).to.be.instanceof(Error);

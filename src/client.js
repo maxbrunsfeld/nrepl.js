@@ -1,16 +1,30 @@
 var _ = require("underscore");
+var net = require("net");
 var bencode = require("bencode");
 var EvalResponse = require("./eval_response");
 var DescribeResponse = require("./describe_response");
 
-function Client(socket) {
-  this._socket = socket;
+function Client() {
+  this._isConnected = false;
+  this._socket = new net.Socket();
   this._requests = {};
   this._nextRequestId = 0;
-  startListening(this);
 }
 
 _.extend(Client.prototype, {
+  connect: function(port, fn) {
+    var self = this;
+    self._socket
+      .on("error", fn)
+      .connect(port, function() {
+        self._isConnected = true;
+        self._socket.on("data", function(data) {
+          handleData(self, data);
+        });
+        fn();
+      });
+  },
+
   eval: function(expression, fn) {
     sendRequest(this, {
       op: 'eval',
@@ -27,18 +41,13 @@ _.extend(Client.prototype, {
 
   end: function() {
     this._socket.end();
+    this._isConnected = false;
   },
+
+  isConnected: function() {
+    return this._isConnected;
+  }
 });
-
-function startListening(self) {
-  self._socket.on("data", function(data) {
-    handleData(self, data);
-  });
-
-  self._socket.on("error", function(error) {
-    console.error("ERROR:", error);
-  });
-}
 
 function sendRequest(self, request, response, fn) {
   var id = requestId(self);
